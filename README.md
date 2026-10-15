@@ -33,6 +33,7 @@ The psycopg driver needs the libpq client library. [pyproject.toml](pyproject.to
 ```bash
 git clone https://github.com/haowron/azuki.git
 cd azuki
+uv python install 3.14.4
 uv sync --locked
 uv run pytest
 uv run ruff check src tests
