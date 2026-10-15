@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrackEverything — core and components dependencies</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    font: 15px/1.65 system-ui, -apple-system, "Segoe UI", "PingFang SC", sans-serif;
+    margin: 0 auto; padding: 32px 24px 64px; max-width: 960px;
+    background: #f6f7f9; color: #1c2128;
+  }
+  @media (prefers-color-scheme: dark) { body { background: #14171c; color: #d8dee6; } }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 40px 0 12px; padding-top: 16px; border-top: 1px solid #d7dbe1; }
+  @media (prefers-color-scheme: dark) { h2 { border-color: #2a3038; } }
+  .subtitle { color: #7a828e; font-size: 13px; margin-bottom: 8px; }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; }
+  p code, li code, td code { background: rgba(127,127,127,.12); padding: 1px 5px; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13.5px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #d7dbe1; vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #7a828e; }
+  @media (prefers-color-scheme: dark) { th, td { border-color: #2a3038; } }
+  .law {
+    margin: 16px 0; padding: 14px 18px; border-left: 4px solid #1e6b33;
+    background: rgba(30,107,51,.08); border-radius: 0 8px 8px 0; font-size: 15px;
+  }
+  @media (prefers-color-scheme: dark) { .law { border-color: #7fd692; background: rgba(127,214,146,.07); } }
+  .law strong { display: block; margin-bottom: 4px; }
+  .law .sub { display: block; margin-top: 6px; font-size: 13.5px; color: #5b6470; }
+  @media (prefers-color-scheme: dark) { .law .sub { color: #98a2af; } }
+  /* Layer display */
+  .layer {
+    border: 1.5px solid #c9ced6; border-radius: 10px; padding: 10px 16px;
+    max-width: 780px; margin: 0 auto; background: rgba(127,127,127,.04);
+  }
+  @media (prefers-color-scheme: dark) { .layer { border-color: #2a3038; background: rgba(127,127,127,.06); } }
+  .layer .name { font-weight: 700; font-size: 13.5px; }
+  .layer .where { color: #7a828e; font-size: 12px; margin-top: 1px; }
+  .layer .mods { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip {
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px;
+    padding: 2px 8px; border-radius: 999px; border: 1px solid #c9ced6; background: rgba(127,127,127,.07);
+  }
+  @media (prefers-color-scheme: dark) { .chip { border-color: #2a3038; } }
+  .chip b { font-weight: 700; }
+  .l-entry { border-color: #8a6116; }
+  .l-comp  { border-color: #8a6116; }
+  .l-app   { border-color: #1e6b33; }
+  .l-builtin { border-color: #2b5f8a; }
+  .l-abc   { border-color: #8a2b6b; }
+  .l-config { border-color: #6b4f8a; border-style: dashed; }
+  .dep-arrow { text-align: center; color: #7a828e; font-size: 12px; padding: 3px 0; max-width: 780px; margin: 0 auto; }
+  .dep-arrow b { font-size: 15px; display: block; line-height: 1.1; }
+  .note { color: #7a828e; font-size: 12.5px; margin-top: 6px; }
+  .keys { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+  .key { flex: 1 1 300px; border: 1px dashed #c9ced6; border-radius: 10px; padding: 12px 16px; font-size: 13.5px; }
+  @media (prefers-color-scheme: dark) { .key { border-color: #2a3038; } }
+  .key b { font-size: 14px; }
+  .key .mono { display: block; margin: 6px 0; }
+  /* Mermaid diagram */
+  .mermaid-card {
+    background: #fff; border: 1px solid #c9ced6; border-radius: 10px;
+    padding: 14px; overflow-x: auto; margin: 14px 0;
+    position: relative; left: 50%; transform: translateX(-50%);
+    width: min(1600px, calc(100vw - 32px));
+  }
+  .mermaid-card.full { max-height: 85vh; overflow: auto; }
+  .mermaid-card .mermaid { margin: 0; font-size: 12px; line-height: 1.5; }
+  .mermaid-card svg { display: block; height: auto; }
+  .diagram-tools { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+  .diagram-tools button {
+    font: inherit; font-size: 12px; color: #1c2128; background: #fff; cursor: pointer;
+    border: 1px solid #c9ced6; border-radius: 6px; padding: 3px 10px;
+  }
+  @media (prefers-color-scheme: dark) { .mermaid-card { border-color: #2a3038; } }
+  footer { margin-top: 48px; color: #7a828e; font-size: 12px; border-top: 1px solid #d7dbe1; padding-top: 12px; }
+  @media (prefers-color-scheme: dark) { footer { border-color: #2a3038; } }
+</style>
+</head>
+<body>
+<h1>Dependencies between core and components</h1>
+<div class="subtitle">Placement and connections of the composition roots, shared infrastructure and version-owned components · based on the code in the working tree</div>
+<p><a href="README.md">Documentation guide</a> · <a href="core/README.md">core</a> ·
+<a href="components/README.md">components</a> · <a href="components/VERSIONING.md">Component versioning</a> ·
+<a href="components/FASTAPI.md">FastAPI management features</a></p>
+<div class="law">
+<strong>Agents run from the main of the version store (<code>Repo</code>) through the run handle. Components live in the component repository, and the Host never imports or calls them.</strong>
+<code>core/abc</code> uses the pure <code>builtin/domain</code> and does not depend on the ORM. <code>builtin/app.py</code> connects the outer implementations.
+<code>core/builtin/app.py</code> passes shared services as <code>HostServices</code> (<code>open_host_services()</code>), and the version-owned <code>agent/compose.py</code> builds the component graph.
+<span class="sub">Dependencies from version-owned components on core services and contracts and on Host modules are allowed (a child request goes through <code>publish_child</code> in <code>queue/child.py</code>). From the Host side, version components are reached only through
+dynamic loading into per-version namespaces, the run handle (<code>RunVersions</code>: the Runtime's dispatch entrance and <code>call_agent</code>'s child lookup), and the main component graph (catalog).
+Versions are commits of the component repository read from its bare mirror; periodic component work runs as agents started from the <code>schedule</code> table.</span>
+</div>
+<h2>1. Infrastructure and concrete implementations</h2>
+<table>
+<tr><th>Location</th><th>Responsibilities owned</th><th>How it connects</th></tr>
+<tr><td><code>core/abc</code></td><td>Shared contracts, BaseAgent's loop, registries and child delegation (<code>call_agent</code>), the child lookup (<code>AgentLookup</code>, <code>AgentContext.agents</code>)</td><td>Inheritance, conformance to contracts</td></tr>
+<tr><td><code>core/builtin</code></td><td>The Runtime (from reading to agent execution), sessions, logs, errors, instance assembly, the shared services the Host passes to versions and name-based agent assembly (<code>HostServices</code> and <code>build_agents</code> in <code>compose.py</code>), the catalog (<code>catalog.py</code>), the display value of the running version (<code>code_version.py</code>)</td><td>Constructor and function injection</td></tr>
+<tr><td><code>core/versioning</code></td><td>Component versions as commits of the component repository read through its bare git mirror, main, sync with GitHub's main, fork, merge (rebase and push), the per-run agent handle and version release, the check CLI used by the pre-push hook (<code>python -m trackeverything.core.versioning check</code>)</td><td>Dynamic loading into per-version namespaces, the run handle (<code>RunVersions</code>)</td></tr>
+<tr><td><code>core/builtin/app.py</code> / <code>api/app.py</code></td><td>Component assembly, startup and shutdown of each process. The entry points are split into api/__main__.py and core/builtin/__main__.py</td><td>The runtime assembles the version store, Runtime and consumer; the queue assembles HTTP, the intake SDKs and the Producer</td></tr>
+<tr><td><code>agent/compose.py</code></td><td>The list of agent classes (<code>AGENTS</code>) and entrances (<code>ENTRANCES</code>: only <code>dispatch</code>), dedicated dependencies, the Source dictionary, <code>fetch_source</code>, the mesh, skill binding</td><td><code>build(services)</code> creates instances with <code>build_agents</code> and returns a <code>ComponentGraph</code> (all agents, entrances, sources)</td></tr>
+<tr><td><code>agent/</code> / <code>tools/</code> / <code>skills/</code> / <code>sources/</code> / <code>harnesses/</code></td><td>Version-owned concrete processing in the component repository: tracking, material maintenance, investigation, fetching, procedures, daily maintenance</td><td>Agent declarations of tools / agents (child names) / llm (LLM name) / skills / pre / post, the Source dictionary</td></tr>
+<tr><td><code>api/</code> / <code>integration/</code></td><td>The Host-owned management API, pages and intake (format validation, identity pruning and raw publishing for GitHub, Discord and Slack), scheduled triggers from the <code>schedule</code> table and one-shot reservations from the <code>reservation</code> table</td><td>APIRouter factories, Connector registration. Never calls version-owned components</td></tr>
+<tr><td><code>optimizer/</code></td><td>A Host-owned feature placed only in the runtime process. It observes run records, runs the registered checks in order and returns a report</td><td><code>core/builtin/app.py</code> runs <code>install</code>, and the version's entry agent <code>optimizer</code> calls <code>handle</code>. It imports neither components nor <code>core/versioning</code></td></tr>
+</table>
+<p>Host / Execution / Input / Source are runtime responsibilities, while core / components is a placement classification.
+The version ownership scope and update rules are described in <a href="components/VERSIONING.md">Component versioning</a>,
+and the difference between the outer HTTP entry points and the management dashboard in the <a href="components/FASTAPI.md">FastAPI document</a>.</p>
+<h2>2. Main dependencies and injection</h2>
+<div class="diagram-tools"><button type="button" id="diagram-size" aria-pressed="false" hidden>Show actual size</button></div>
+<div class="mermaid-card"><!-- GENERATED FROM dependencies.mmd: edit the source, regenerate this block. -->
+<pre class="mermaid">
+%% TrackEverything layout and dependencies. Solid lines are use; dashed lines are injection and version loading.
+flowchart TB
+    QMAIN[&quot;api/__main__.py&lt;br/&gt;queue process entry point&quot;]
+    RMAIN[&quot;core/builtin/__main__.py&lt;br/&gt;runtime process entry point&quot;]
+    QAPP[&quot;api/app.py&lt;br/&gt;producer-side assembly&quot;]
+    API[&quot;api&lt;br/&gt;FastAPI management API, pages&quot;]
+    INPUT[&quot;integration&lt;br/&gt;intake format checks, identity pruning, raw publishing, scheduled triggers&quot;]
+    PRODUCER[&quot;queue/producer.py&lt;br/&gt;shared SDK, durable enqueue&quot;]
+    LABELS[&quot;queue/project_labels.py&lt;br/&gt;reads project labels&quot;]
+    REDIS[(&quot;Redis Streams&lt;br/&gt;queue, dead, catalog&quot;)]
+    CONSUMER[&quot;queue/consumer.py&lt;br/&gt;read one, reclaim, dead, ACK&quot;]
+    CHILD[&quot;queue/child.py&lt;br/&gt;publish_child: child requests of components&quot;]
+    QCONTRACTS[&quot;queue/contracts.py&lt;br/&gt;PublishReceipt, QueueUnavailableError&quot;]
+    MIRROR[(&quot;component repository&lt;br/&gt;bare mirror COMPONENT_REPO_DIR, GitHub main&quot;)]
+    HOOK[&quot;scripts/component-hooks&lt;br/&gt;pre-push of a component clone / pre-receive of the local mirror&quot;]
+    subgraph CORE[&quot;core&quot;]
+        ABC[&quot;abc&lt;br/&gt;shared contracts, execution request, child lookup&quot;]
+        DOMAIN[&quot;builtin/domain&lt;br/&gt;pure Python values, in-run state&quot;]
+        APP[&quot;builtin/app.py&lt;br/&gt;runtime-side assembly, Host services&quot;]
+        RUNTIME[&quot;builtin/runtime.py&lt;br/&gt;read loop, main check, run handle, Context, session records, dispatch execution&quot;]
+        HOSTCOMPOSE[&quot;builtin/compose.py&lt;br/&gt;HostServices, ComponentGraph, build_agents&quot;]
+        CATALOG[&quot;builtin/catalog.py&lt;br/&gt;catalog of the main component graph&quot;]
+        CODEVER[&quot;builtin/code_version.py&lt;br/&gt;Host version + component version&quot;]
+        EXEC[&quot;builtin&lt;br/&gt;sessions, subprocess launch, logs, mesh&quot;]
+        ORM[&quot;orm&lt;br/&gt;core tables (incl. unused component_*), connection, schema check&quot;]
+        subgraph VERSIONING[&quot;versioning&quot;]
+            VCLI[&quot;versioning/__main__.py&lt;br/&gt;check CLI&quot;]
+            REPO[&quot;versioning/repo.py&lt;br/&gt;version store: main, refresh, sync, fork, merge, validate, run handle, release, process singleton&quot;]
+            STORE[&quot;versioning/store.py&lt;br/&gt;git mirror: commits, main, fork refs, fetch, merge-tree, push&quot;]
+            LOADER[&quot;versioning/loader.py&lt;br/&gt;loads into per-version namespaces&quot;]
+            SNAPSHOT[&quot;versioning/snapshot.py&lt;br/&gt;five folders, owned paths, path checks&quot;]
+        end
+        SHARED[&quot;shared_state.py&lt;br/&gt;shared state, cross-version mutual exclusion&quot;]
+    end
+    LLM[&quot;llm&lt;br/&gt;providers, fallback, throttle, metering&quot;]
+    OPTIMIZER[&quot;optimizer&lt;br/&gt;runtime-only Host feature: observes run records, checks, reports, repairs errors&quot;]
+    subgraph COMPONENTS[&quot;component repository: version-owned concrete capabilities&quot;]
+        COMPOSE[&quot;agent/compose.py&lt;br/&gt;component graph&quot;]
+        DISPATCH[&quot;agent/dispatch.py&lt;br/&gt;routes every request, named runs, authorization re-verification, ACK&quot;]
+        AGENT[&quot;agent, harnesses&quot;]
+        TOOLS[&quot;tools, skills&quot;]
+        SOURCES[&quot;sources&quot;]
+    end
+    QMAIN --&gt; QAPP
+    RMAIN --&gt; APP
+    QAPP --&gt; API
+    QAPP --&gt; INPUT
+    QAPP --&gt; PRODUCER
+    INPUT --&gt; PRODUCER
+    INPUT --&gt; ORM
+    API --&gt; EXEC
+    LABELS --&gt; ORM
+    PRODUCER --&gt; REDIS
+    PRODUCER --&gt; ABC
+    APP --&gt; CONSUMER
+    APP --&gt; RUNTIME
+    APP --&gt; EXEC
+    APP --&gt; REPO
+    APP --&gt; HOSTCOMPOSE
+    APP --&gt; CATALOG
+    APP --&gt; CODEVER
+    APP --&gt; LLM
+    APP --&gt; PRODUCER
+    APP -- &quot;install&quot; --&gt; OPTIMIZER
+    APP -- &quot;install Producer&quot; --&gt; CHILD
+    CONSUMER --&gt; REDIS
+    CONSUMER --&gt; ABC
+    PRODUCER --&gt; QCONTRACTS
+    CHILD --&gt; ABC
+    CHILD --&gt; QCONTRACTS
+    APP -. &quot;injects read source, version store&quot; .-&gt; RUNTIME
+    RUNTIME --&gt; ABC
+    RUNTIME --&gt; EXEC
+    RUNTIME --&gt; REPO
+    RUNTIME --&gt; CODEVER
+    VCLI --&gt; APP
+    VCLI --&gt; HOSTCOMPOSE
+    VCLI --&gt; REPO
+    VCLI --&gt; STORE
+    VCLI --&gt; ORM
+    HOOK -. &quot;runs check through run_local.sh&quot; .-&gt; VCLI
+    REPO --&gt; STORE
+    REPO --&gt; LOADER
+    REPO --&gt; SNAPSHOT
+    STORE -- &quot;git subprocess, fetch, push&quot; --&gt; MIRROR
+    STORE --&gt; SNAPSHOT
+    LOADER --&gt; SNAPSHOT
+    HOSTCOMPOSE --&gt; ABC
+    CATALOG --&gt; ABC
+    CODEVER --&gt; DOMAIN
+    ABC --&gt; DOMAIN
+    EXEC --&gt; ABC
+    EXEC --&gt; DOMAIN
+    EXEC --&gt; ORM
+    EXEC --&gt; CODEVER
+    LLM --&gt; ABC
+    LLM --&gt; DOMAIN
+    LOADER -. &quot;loads into per-version namespace&quot; .-&gt; COMPOSE
+    HOSTCOMPOSE -. &quot;calls the version build&quot; .-&gt; COMPOSE
+    COMPOSE --&gt; HOSTCOMPOSE
+    COMPOSE --&gt; DISPATCH
+    COMPOSE --&gt; AGENT
+    DISPATCH --&gt; AGENT
+    DISPATCH --&gt; TOOLS
+    DISPATCH --&gt; EXEC
+    COMPOSE --&gt; TOOLS
+    COMPOSE --&gt; SOURCES
+    COMPOSE --&gt; EXEC
+    AGENT --&gt; ABC
+    AGENT --&gt; TOOLS
+    AGENT -- &quot;entrance optimizer calls handle&quot; --&gt; OPTIMIZER
+    OPTIMIZER --&gt; ABC
+    OPTIMIZER --&gt; DOMAIN
+    OPTIMIZER --&gt; EXEC
+    OPTIMIZER -- &quot;reads logs&quot; --&gt; ORM
+    OPTIMIZER -- &quot;fork, merge via current_repo&quot; --&gt; REPO
+    TOOLS --&gt; ABC
+    TOOLS --&gt; SHARED
+    TOOLS --&gt; ORM
+    TOOLS --&gt; LABELS
+    TOOLS -- &quot;publish_child&quot; --&gt; CHILD
+    SOURCES --&gt; ABC
+    classDef kernel fill:#eff6ff,stroke:#2b5f8a,color:#1c2128
+    classDef domain fill:#fdf2f8,stroke:#8a2b6b,color:#1c2128
+    classDef outside fill:#f0fdf4,stroke:#1e6b33,color:#1c2128
+    class APP,RUNTIME,HOSTCOMPOSE,CATALOG,CODEVER,EXEC,ORM,VCLI,REPO,STORE,LOADER,SNAPSHOT,SHARED kernel
+    class ABC,DOMAIN domain
+    class QAPP,API,INPUT,PRODUCER,LABELS,CONSUMER,CHILD,QCONTRACTS,HOOK,DISPATCH,LLM,OPTIMIZER,COMPOSE,AGENT,TOOLS,SOURCES outside
+</pre>
+<!-- END GENERATED --></div>
+<p class="note">Selected main relationships. Solid lines are use and imports; dashed lines are connections injected at assembly time and per-version dynamic loading.
+config, the standard library, external libraries and some internal dependencies are omitted.
+Every execution request, whether from an external event, the CLI, a scheduled trigger or a child request of a component (automated development, the next Sentry item, the PR retirement sweep), is saved in Redis as an <code>EventRequest</code>, and the Runtime hands it to the version's dispatch agent (<code>agent/dispatch.py</code>). The producer side never runs agents.
+The dashed line <code>versioning/loader.py</code> → <code>agent/compose.py</code> is loading into a per-version module namespace, and the dashed line <code>builtin/compose.py</code> → <code>agent/compose.py</code> is the call to the version's <code>build</code>.
+<a href="dependencies.mmd">Mermaid source</a>. The diagram is fitted to the page width; "Show actual size" lets you scroll inside the card in both directions.
+The diagram is loaded from a CDN; if it cannot be loaded, the source is shown.</p>
+<h2>3. Evidence for the connections</h2>
+<table>
+<tr><th>Connection</th><th>Code</th><th>Responsibility</th></tr>
+<tr><td>Composition root → Host, version store</td><td><a href="../src/trackeverything/core/builtin/app.py">core/builtin/app.py</a></td><td>Assembles the named LLMs (<code>max</code>, <code>high</code>, <code>low</code>, <code>flash</code>, <code>flash_low</code>), logs and Stores with <code>open_host_services()</code> and passes them to versions as <code>HostServices</code>. Starts the version store and loads the mirror's main (when the mirror has no main, it fetches GitHub's main and adopts it once it loads; a failure aborts startup) before creating the Runtime, which syncs with GitHub's main every <code>COMPONENT_FETCH_INTERVAL</code></td></tr>
+<tr><td>Composition root → child requests</td><td><a href="../src/trackeverything/core/builtin/app.py">core/builtin/app.py</a> / <a href="../src/trackeverything/queue/child.py">queue/child.py</a></td><td><code>prepare_runtime_state</code> installs the runtime's Producer with <code>child.install</code>; components publish requests with the running message as parent through <code>publish_child</code> (<code>external_id</code> <code>&lt;message id&gt;:&lt;key&gt;</code>). The maintenance tick only saves the catalog and the heartbeat</td></tr>
+<tr><td>Version → component graph</td><td><a href="../src/trackeverything/agent/compose.py">agent/compose.py</a> / <a href="../src/trackeverything/core/builtin/compose.py">builtin/compose.py</a></td><td><code>build_agents</code> creates one instance per agent class with the client named by <code>llm</code> and checks that the child names each class declares in <code>agents</code> are in the list (child instances are not bound; unknown or duplicate names fail the version's assembly). It bundles the entrances, <code>SOURCES</code>, <code>fetch_source</code>, the mesh and skills, and returns a <code>ComponentGraph</code> (all agents, entrances, sources)</td></tr>
+<tr><td>Runtime → version store</td><td><a href="../src/trackeverything/core/versioning/repo.py">versioning/repo.py</a></td><td>At each run start, <code>refresh()</code> reads the mirror's main and, if it differs, loads it outside the event loop and switches. The run handle <code>RunVersions</code> returns, per name, the main first obtained until the run ends, and <code>release</code> at the end releases versions that are neither main nor in use</td></tr>
+<tr><td>Version store → component repository</td><td><a href="../src/trackeverything/core/versioning/store.py">versioning/store.py</a></td><td><code>GitVersionStore</code> runs git against the bare mirror <code>COMPONENT_REPO_DIR</code> (<code>refs/heads/main</code> = adopted main, <code>refs/remotes/origin/main</code> = GitHub's main at the last fetch, <code>refs/te/forks/&lt;id&gt;</code> = optimizer candidates). Moving main is a compare-and-swap (<code>move_main</code>); only <code>fetch</code> and the optimizer merge's non-force <code>push</code> use the network, and the mirror's main moves only after a push succeeds</td></tr>
+<tr><td>Check CLI → version store</td><td><a href="../src/trackeverything/core/versioning/__main__.py">versioning/__main__.py</a> / <a href="../scripts/component-hooks/">scripts/component-hooks/</a></td><td><code>python -m trackeverything.core.versioning check [--repo &lt;git working tree&gt;] [&lt;rev&gt;]</code> loads a commit with the same <code>open_host_services()</code> and <code>prepare_components</code> as the runtime and prints <code>ok &lt;SHA&gt;</code> or the failing path and line. The <code>pre-push</code> hook of a component clone and the <code>pre-receive</code> hook of the local mirror run it for every new <code>main</code>. It neither reads nor writes the runtime's <code>main</code></td></tr>
+<tr><td>Redis → execution and ACK</td><td><a href="../src/trackeverything/queue/consumer.py">consumer.py</a> / <a href="../src/trackeverything/core/builtin/runtime.py">runtime.py</a></td><td>The Runtime caps running tasks at <code>RUN_CONCURRENCY</code> and receives messages one at a time from QueueConsumer; in a task with a copied context it checks the mirror's main and obtains dispatch through the run handle. It builds the AgentContext from the <code>EventRequest</code>, decides the run_id and session, and performs start record → dispatch agent → result record. Runs in the same session also run in parallel. <code>RUN_TIMEOUT</code> cancels the run. The Runtime does not ACK; the dispatch agent runs <code>XACK</code> and <code>XDEL</code> through <code>ctx.ack</code>. Unacked messages are reclaimed after 30 minutes and move to dead after more than 3 deliveries</td></tr>
+<tr><td>HTTP → publish function</td><td><a href="../src/trackeverything/integration/webhook/__init__.py">integration/webhook</a></td><td>Creates <code>POST /webhook/{name}</code> per Connector, durably enqueues the format-validated raw EventRequest and returns 202. core does not import api/</td></tr>
+<tr><td>External connections → Producer</td><td><a href="../src/trackeverything/integration/connector.py">connector.py</a> / <a href="../src/trackeverything/integration/webhook/github.py">integration/webhook/github.py</a></td><td>The queue connects the intake SDKs and validation functions. The runtime's Runtime does not route by provider and hands everything to the dispatch entrance</td></tr>
+<tr><td>Slack → enqueue</td><td><a href="../src/trackeverything/integration/slack.py">integration/slack.py</a></td><td>Durably enqueues deliveries for the target team and channel as raw events, then sends the SDK ACK. dispatch delegates to slack, which summarizes mentions of the owner and notifies Discord</td></tr>
+<tr><td>Scheduled trigger → enqueue</td><td><a href="../src/trackeverything/integration/schedule.py">integration/schedule.py</a></td><td>Reads the <code>schedule</code> and <code>reservation</code> tables (through the core/orm connection) at most every 30 seconds and durably enqueues named runs at cron times and reservation times. It never writes the tables</td></tr>
+<tr><td>Cross-version state</td><td><a href="../src/trackeverything/core/shared_state.py">shared_state.py</a></td><td><code>shared()</code>, <code>keyed_lock()</code>, <code>task_lock()</code>. A lock wraps only one operation inside a tool. <code>TaskLock</code> is not reentrant; a task that holds a lock and requests it again gets <code>RuntimeError</code></td></tr>
+<tr><td>Management API → catalog, run records</td><td><a href="../src/trackeverything/api/catalog.py">api/catalog.py</a> / <a href="../src/trackeverything/api/runs.py">api/runs.py</a></td><td>catalog returns the snapshot of the main component graph that the runtime saved to Redis (<code>code_version</code> is main's <code>c.&lt;first 8 characters of the version id&gt;</code>) and the liveness state. The run flow and run statistics read logs and session_run</td></tr>
+</table>
+<h2>4. State ownership</h2>
+<table>
+<tr><th>Storage</th><th>Contents</th><th>Owner</th></tr>
+<tr><td><code>DATABASE_URL</code> (PostgreSQL only, required)</td><td>logs, memory, workspace_slot, discord_message, run_feedback</td><td>Stores (through the ORM) / version-owned tools</td></tr>
+<tr><td><code>DATABASE_URL</code> (PostgreSQL only, required)</td><td>subscription, schedule_cursor, schedule_outbox, execution_receipt, attempt, child. Unused (data retained)</td><td>The code never writes them. Only <code>subscription.project</code> is read, by <code>queue/project_labels.py</code>, as project labels</td></tr>
+<tr><td><code>DATABASE_URL</code> (PostgreSQL only, required)</td><td>session and session_run (one-to-many), channel, project_channel, session_source, codex_session</td><td>Runtime / PostgresSessionStore / PostgresChannelStore / PostgresCodexSessionStore</td></tr>
+<tr><td><code>COMPONENT_REPO_DIR</code> (default <code>data/components.git</code>)</td><td>The bare git mirror of the component repository: versions (commits), the adopted main, GitHub's main at the last fetch, kept optimizer candidates. Commits of released versions remain</td><td><code>GitVersionStore</code>. Writes come from the version store's start, sync, fork and merge</td></tr>
+<tr><td><code>QUEUE_REDIS_URL</code></td><td>queue stream, dead stream, catalog</td><td>RedisStream / Producer / QueueConsumer. Recommended settings are AOF always and noeviction (not checked at startup)</td></tr>
+<tr><td><code>DOCS_DIR</code></td><td>Work docs for issues, PRs and Notion pages</td><td>The <code>docs_*</code> tools in <code>tools/docs/</code></td></tr>
+<tr><td><code>PROJECTS_DIR</code> (default <code>DOCS_DIR/projects</code>)</td><td>Body, sources, conflicts, notification records</td><td>Project document tools</td></tr>
+<tr><td><code>REPORTS_DIR</code></td><td>Independent HTML and hash-pinned Mermaid for reviews, documents and issue reports</td><td>publish_review_report / publish_page; viewing through <code>api/reports.py</code></td></tr>
+<tr><td><code>REPOS_DIR</code></td><td>The workspace pool clone rack, fetch results, working directories for commands</td><td>workspace_pool / run_command / github_fetch</td></tr>
+<tr><td><code>HITL_DIR</code></td><td>Mapping between conversations and CLI sessions</td><td>ConversationSessionTool</td></tr>
+<tr><td>In-memory AgentContext</td><td>data, step budget, tool_state, run ID, session ID, message ID and child lookup (<code>agents</code>) of a single execution</td><td>Created by the Runtime, shared by parent and child AgentCalls</td></tr>
+<tr><td>In-memory versions</td><td>File views, modules (<code>_te_versions.v_&lt;version id&gt;</code>) and component graphs of main and of versions used by runs. A version that is neither main nor used by a run is released. <code>shared()</code> values are single across versions</td><td><code>Repo</code> / shared_state</td></tr>
+</table>
+<p>The queue's <code>message_id</code> (stream id) is the message's only ID, and the Source <code>identity</code> is the input's correlation key.
+A display identity is null when computing it would need I/O.</p>
+<footer>Source of truth: <a href="ARCHITECTURE.html">ARCHITECTURE.html</a>.
+Concrete implementations: <a href="components/README.md">components</a>.
+The diagram's source of truth is dependencies.mmd; the HTML diagram is generated from it.</footer>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: false, theme: "neutral", flowchart: { useMaxWidth: false } });
+  await mermaid.run();
+  const card = document.querySelector(".mermaid-card");
+  const svg = card.querySelector("svg");
+  const button = document.getElementById("diagram-size");
+  if (svg) {
+    const natural = svg.viewBox.baseVal.width;
+    const apply = full => {
+      svg.style.width = full ? `${natural}px` : "100%";
+      svg.style.maxWidth = full ? "none" : "100%";
+      card.classList.toggle("full", full);
+      button.textContent = full ? "Fit to width" : "Show actual size";
+      button.setAttribute("aria-pressed", String(full));
+    };
+    button.addEventListener("click", () => apply(button.getAttribute("aria-pressed") !== "true"));
+    button.hidden = false;
+    apply(false);
+  }
+</script>
+</body>
+</html>

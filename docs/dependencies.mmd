@@ -1,0 +1,128 @@
+%% TrackEverything layout and dependencies. Solid lines are use; dashed lines are injection and version loading.
+flowchart TB
+    QMAIN["api/__main__.py<br/>queue process entry point"]
+    RMAIN["core/builtin/__main__.py<br/>runtime process entry point"]
+    QAPP["api/app.py<br/>producer-side assembly"]
+    API["api<br/>FastAPI management API, pages"]
+    INPUT["integration<br/>intake format checks, identity pruning, raw publishing, scheduled triggers"]
+    PRODUCER["queue/producer.py<br/>shared SDK, durable enqueue"]
+    LABELS["queue/project_labels.py<br/>reads project labels"]
+    REDIS[("Redis Streams<br/>queue, dead, catalog")]
+    CONSUMER["queue/consumer.py<br/>read one, reclaim, dead, ACK"]
+    CHILD["queue/child.py<br/>publish_child: child requests of components"]
+    QCONTRACTS["queue/contracts.py<br/>PublishReceipt, QueueUnavailableError"]
+    MIRROR[("component repository<br/>bare mirror COMPONENT_REPO_DIR, GitHub main")]
+    HOOK["scripts/component-hooks<br/>pre-push of a component clone / pre-receive of the local mirror"]
+    subgraph CORE["core"]
+        ABC["abc<br/>shared contracts, execution request, child lookup"]
+        DOMAIN["builtin/domain<br/>pure Python values, in-run state"]
+        APP["builtin/app.py<br/>runtime-side assembly, Host services"]
+        RUNTIME["builtin/runtime.py<br/>read loop, main check, run handle, Context, session records, dispatch execution"]
+        HOSTCOMPOSE["builtin/compose.py<br/>HostServices, ComponentGraph, build_agents"]
+        CATALOG["builtin/catalog.py<br/>catalog of the main component graph"]
+        CODEVER["builtin/code_version.py<br/>Host version + component version"]
+        EXEC["builtin<br/>sessions, subprocess launch, logs, mesh"]
+        ORM["orm<br/>core tables (incl. unused component_*), connection, schema check"]
+        subgraph VERSIONING["versioning"]
+            VCLI["versioning/__main__.py<br/>check CLI"]
+            REPO["versioning/repo.py<br/>version store: main, refresh, sync, fork, merge, validate, run handle, release, process singleton"]
+            STORE["versioning/store.py<br/>git mirror: commits, main, fork refs, fetch, merge-tree, push"]
+            LOADER["versioning/loader.py<br/>loads into per-version namespaces"]
+            SNAPSHOT["versioning/snapshot.py<br/>five folders, owned paths, path checks"]
+        end
+        SHARED["shared_state.py<br/>shared state, cross-version mutual exclusion"]
+    end
+    LLM["llm<br/>providers, fallback, throttle, metering"]
+    OPTIMIZER["optimizer<br/>runtime-only Host feature: observes run records, checks, reports, repairs errors"]
+    subgraph COMPONENTS["component repository: version-owned concrete capabilities"]
+        COMPOSE["agent/compose.py<br/>component graph"]
+        DISPATCH["agent/dispatch.py<br/>routes every request, named runs, authorization re-verification, ACK"]
+        AGENT["agent, harnesses"]
+        TOOLS["tools, skills"]
+        SOURCES["sources"]
+    end
+    QMAIN --> QAPP
+    RMAIN --> APP
+    QAPP --> API
+    QAPP --> INPUT
+    QAPP --> PRODUCER
+    INPUT --> PRODUCER
+    INPUT --> ORM
+    API --> EXEC
+    LABELS --> ORM
+    PRODUCER --> REDIS
+    PRODUCER --> ABC
+    APP --> CONSUMER
+    APP --> RUNTIME
+    APP --> EXEC
+    APP --> REPO
+    APP --> HOSTCOMPOSE
+    APP --> CATALOG
+    APP --> CODEVER
+    APP --> LLM
+    APP --> PRODUCER
+    APP -- "install" --> OPTIMIZER
+    APP -- "install Producer" --> CHILD
+    CONSUMER --> REDIS
+    CONSUMER --> ABC
+    PRODUCER --> QCONTRACTS
+    CHILD --> ABC
+    CHILD --> QCONTRACTS
+    APP -. "injects read source, version store" .-> RUNTIME
+    RUNTIME --> ABC
+    RUNTIME --> EXEC
+    RUNTIME --> REPO
+    RUNTIME --> CODEVER
+    VCLI --> APP
+    VCLI --> HOSTCOMPOSE
+    VCLI --> REPO
+    VCLI --> STORE
+    VCLI --> ORM
+    HOOK -. "runs check through run_local.sh" .-> VCLI
+    REPO --> STORE
+    REPO --> LOADER
+    REPO --> SNAPSHOT
+    STORE -- "git subprocess, fetch, push" --> MIRROR
+    STORE --> SNAPSHOT
+    LOADER --> SNAPSHOT
+    HOSTCOMPOSE --> ABC
+    CATALOG --> ABC
+    CODEVER --> DOMAIN
+    ABC --> DOMAIN
+    EXEC --> ABC
+    EXEC --> DOMAIN
+    EXEC --> ORM
+    EXEC --> CODEVER
+    LLM --> ABC
+    LLM --> DOMAIN
+    LOADER -. "loads into per-version namespace" .-> COMPOSE
+    HOSTCOMPOSE -. "calls the version build" .-> COMPOSE
+    COMPOSE --> HOSTCOMPOSE
+    COMPOSE --> DISPATCH
+    COMPOSE --> AGENT
+    DISPATCH --> AGENT
+    DISPATCH --> TOOLS
+    DISPATCH --> EXEC
+    COMPOSE --> TOOLS
+    COMPOSE --> SOURCES
+    COMPOSE --> EXEC
+    AGENT --> ABC
+    AGENT --> TOOLS
+    AGENT -- "entrance optimizer calls handle" --> OPTIMIZER
+    OPTIMIZER --> ABC
+    OPTIMIZER --> DOMAIN
+    OPTIMIZER --> EXEC
+    OPTIMIZER -- "reads logs" --> ORM
+    OPTIMIZER -- "fork, merge via current_repo" --> REPO
+    TOOLS --> ABC
+    TOOLS --> SHARED
+    TOOLS --> ORM
+    TOOLS --> LABELS
+    TOOLS -- "publish_child" --> CHILD
+    SOURCES --> ABC
+    classDef kernel fill:#eff6ff,stroke:#2b5f8a,color:#1c2128
+    classDef domain fill:#fdf2f8,stroke:#8a2b6b,color:#1c2128
+    classDef outside fill:#f0fdf4,stroke:#1e6b33,color:#1c2128
+    class APP,RUNTIME,HOSTCOMPOSE,CATALOG,CODEVER,EXEC,ORM,VCLI,REPO,STORE,LOADER,SNAPSHOT,SHARED kernel
+    class ABC,DOMAIN domain
+    class QAPP,API,INPUT,PRODUCER,LABELS,CONSUMER,CHILD,QCONTRACTS,HOOK,DISPATCH,LLM,OPTIMIZER,COMPOSE,AGENT,TOOLS,SOURCES outside

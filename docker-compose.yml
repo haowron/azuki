@@ -1,0 +1,55 @@
+# PostgreSQL は memory・session・ログ、Redis は queue のメッセージを所有する。
+# Redis の AOF always・noeviction は推奨設定であり、アプリは検査しない。
+# アプリは host で queue/runtime の別 process として動く。
+# 既存の pgdata は保持し、Redis の AOF は redisdata へ保存する。
+
+name: trackeverything
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    command: [redis-server, --appendonly, 'yes', --appendfsync, always, --maxmemory-policy, noeviction, --maxmemory, '${TE_REDIS_MAXMEMORY:-512mb}']
+    ports:
+      - "127.0.0.1:${TE_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  # PostgreSQL holding memory / sessions / logs. Password is overridable
+  # via POSTGRES_PASSWORD in .env. The port is published on loopback only
+  # (TE_DB_PORT, default 5432).
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-trackeverything}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trackeverything}
+      POSTGRES_DB: ${POSTGRES_DB:-trackeverything}
+    ports:
+      - "127.0.0.1:${TE_DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trackeverything} -d ${POSTGRES_DB:-trackeverything}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# 各保存サービスの永続 volume。
+volumes:
+  pgdata:
+  redisdata:

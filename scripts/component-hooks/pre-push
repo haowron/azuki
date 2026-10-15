@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# 部品のリポジトリの clone の pre-push hook。clone の core.hooksPath をこの directory にして使う。
+# git が標準入力に渡す更新(<local ref> <local sha> <remote ref> <remote sha>)のうち、
+# refs/heads/main を更新するもの(削除を除く)ごとに、この hook を持つ Host の launcher で check を実行する。
+# 一つでも失敗すれば非 0 で終わり、push を止める。他の branch への push は検証しない。
+set -uo pipefail
+
+te_home="$(cd "$(dirname "$0")/../.." && pwd)"
+top="$(git rev-parse --show-toplevel)"
+zero="0000000000000000000000000000000000000000"
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] || continue
+  [ "$local_sha" = "$zero" ] && continue
+  if ! bash "$te_home/scripts/run_local.sh" python -m trackeverything.core.versioning check --repo "$top" "$local_sha"; then
+    echo "pre-push: component check failed for $local_sha; push stopped" >&2
+    status=1
+  fi
+done
+exit "$status"

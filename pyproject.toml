@@ -1,0 +1,76 @@
+[project]
+name = "trackeverything"
+version = "0.1.0"
+description = "Goal-driven AI agent that tracks changes across sources, investigates them, and acts on the result."
+readme = "README.md"
+authors = [
+    { name = "haowron" }
+]
+requires-python = ">=3.14.2"
+dependencies = [
+    "aiohttp>=3.14",
+    "alembic>=1.20",
+    "claude-agent-sdk>=0.2.165",
+    "cronsim>=2.7",
+    "discord-py>=2.7.1,<3",
+    "fastapi>=0.115",
+    "httpx>=0.28.1",
+    "jsonschema>=4.26.0",
+    "markdown-it-py>=4.2.0",
+    "openai>=1.50",
+    "openai-codex>=0.162.1",
+    "psycopg>=3.2",
+    "pydantic>=2.9",
+    "pyyaml>=6.0.3",
+    "redis>=6.4,<8",
+    "referencing>=0.37.0",
+    "slack-sdk>=3.45.0,<4",
+    "sqlalchemy[asyncio]>=2.0",
+    "tzdata>=2024.1",
+    "uvicorn>=0.30",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.15.20",
+    "mypy>=1.13",
+    "httpx2>=2.13.1,<3",
+    "types-pyyaml>=6.0.12.20260906",
+    "types-jsonschema>=4.26.0.20261006",
+    "pytest-asyncio>=1.4.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.11,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 255
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "N"]
+# Tool/agent subclasses declare their LLM-facing schema (arguments) as
+# mutable class attributes by design — they're shared metadata, not per-instance
+# state, and the Tool ABC establishes the pattern. RUF012 (mutable class-var
+# default) fires on every such dict literal; ignoring it keeps the bare
+# assignments without a ClassVar annotation.
+ignore = ["RUF012"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["trackeverything"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+plugins = ["pydantic.mypy"]

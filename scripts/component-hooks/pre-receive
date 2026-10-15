@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# ローカル方式の mirror(data/components.git)の pre-receive hook。runtime が core.hooksPath をこの directory にする。
+# git が標準入力に渡す更新(<old sha> <new sha> <ref>)のうち、refs/heads/main の削除は拒否し、
+# main の新しい tip はこの hook を持つ Host の launcher で check を実行する。一つでも失敗すれば push 全体を拒否する。
+# 他の ref は検証せずに受け付ける。push の object は検証の間 quarantine にあり、git が渡す環境変数で読む。
+set -uo pipefail
+
+te_home="$(cd "$(dirname "$0")/../.." && pwd)"
+repository="$(cd "${GIT_DIR:-.}" && pwd)"
+export GIT_DIR="$repository"
+zero="0000000000000000000000000000000000000000"
+status=0
+while read -r old_sha new_sha ref; do
+  [ "$ref" = "refs/heads/main" ] || continue
+  if [ "$new_sha" = "$zero" ]; then
+    echo "pre-receive: deleting the component main is not allowed" >&2
+    status=1
+    continue
+  fi
+  if ! bash "$te_home/scripts/run_local.sh" python -m trackeverything.core.versioning check --repo "$repository" "$new_sha"; then
+    echo "pre-receive: component check failed for $new_sha; push refused" >&2
+    status=1
+  fi
+done
+exit "$status"

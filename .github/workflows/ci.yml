@@ -1,0 +1,43 @@
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.11.11"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - name: Install libpq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libpq5
+      - name: Install locked dependencies
+        run: uv sync --locked
+      - name: Test
+        run: uv run --locked pytest
+      - name: Lint
+        run: uv run --locked ruff check src tests
+      - name: Type check
+        run: uv run --locked mypy src
+      - name: Check code guide
+        run: uv run --locked python scripts/render_core_guide.py --check

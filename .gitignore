@@ -1,0 +1,61 @@
+# Ignore rules, grouped by why a path stays out of the repository.
+# Paths starting with "/" are anchored at the repository root.
+
+# --- Secrets -----------------------------------------------------------------
+# Real credentials live only in .env (read by scripts/run_local.sh and compose).
+# .env.example is the tracked template.
+.env
+.env.*
+!.env.example
+
+# --- Python, uv and tool caches -----------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Editors and OS -----------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Runtime state ------------------------------------------------------------
+# Everything under data/ is per-host state (logs, work docs, clones, launchd
+# output). Only the templates are tracked; copy them to data/role.md and
+# data/repo-catalog.md to enable the recipient profile and the repo catalog.
+/data/*
+!/data/*.example.md
+
+# --- Private payloads staged on the host --------------------------------------
+# The reviewer skill (REVIEW_SKILL_PATH, default claude/skills/reviewer) is
+# personal configuration. Review knowledge lives under data/review/knowledge.
+/claude/
+
+# --- Local-only documents and scratch output ----------------------------------
+# Dated design plans stay on the author's machine; docs/ holds the current spec.
+/docs/plans/
+/tmp/
+cc-*-evidence/
+.impeccable/
+
+# --- Maintainer overrides and AI assistant local state -------------------------
+# AGENTS.local.md holds the maintainer's personal rules (referenced from
+# AGENTS.md). Assistant session state, skills and hooks are per machine.
+/AGENTS.local.md
+/.agents/
+.omo/
+.zcode/
+.claude/settings.local.json
+.claude/worktrees/
+
+# The component working copy (a git repository of its own; see docs/components/VERSIONING.md).
+/components/

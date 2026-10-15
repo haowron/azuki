@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrackEverything</title>
+<style>
+:root { color-scheme: light dark; }
+body { margin: 0; background: light-dark(#f5f6f8, #101216); }
+#te-bulk-design {
+  --tb-page: light-dark(#f5f6f8, #101216);
+  --tb-surface: light-dark(#ffffff, #1a1e25);
+  --tb-group: light-dark(#eef0f4, #242a34);
+  --tb-text: light-dark(#202733, #eef1f6);
+  --tb-muted: light-dark(#586373, #abb5c5);
+  --tb-line: light-dark(#dce1e9, #363e4b);
+  --tb-accent: light-dark(#2256bd, #a2bdff);
+  --tb-accent-text: light-dark(#ffffff, #15213b);
+  --tb-selected: light-dark(#edf3ff, #20314d);
+  --tb-selected-text: light-dark(#224c9d, #c4d6ff);
+  --tb-green: light-dark(#186141, #a0e4bc);
+  --tb-green-bg: light-dark(#e8f5ed, #1d382c);
+  --tb-violet: light-dark(#6d28d9, #c4b5fd);
+  --tb-teal: light-dark(#0e7490, #67e8f9);
+  --tb-orange: light-dark(#c2410c, #fdba74);
+  --tb-pink: light-dark(#be185d, #f9a8d4);
+  --tb-red: light-dark(#8f2934, #ffc3ca);
+  --tb-red-bg: light-dark(#fcebec, #3d2327);
+  color: var(--tb-text); background: var(--tb-page); max-width: 1600px; margin: 0 auto;
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+  scrollbar-color: var(--tb-muted) var(--tb-page);
+}
+#te-bulk-design * { box-sizing: border-box; }
+#te-bulk-design [hidden] { display: none !important; }
+#te-bulk-design button, #te-bulk-design input { font: inherit; color: inherit; }
+#te-bulk-design button { touch-action: manipulation; cursor: pointer; }
+#te-bulk-design button:disabled { opacity: .45; cursor: not-allowed; }
+#te-bulk-design ::selection { background: var(--tb-selected); color: var(--tb-selected-text); }
+#te-bulk-design :focus-visible { outline: 2px solid var(--tb-accent); outline-offset: 3px; }
+#te-bulk-design input { accent-color: var(--tb-accent); caret-color: var(--tb-accent); }
+#te-bulk-design .tb-icon { flex-shrink: 0; vertical-align: middle; }
+#te-bulk-design .tb-top { display: flex; align-items: center; gap: 12px; padding: 8px 24px; background: linear-gradient(90deg, light-dark(#2256bd, #274a8f), light-dark(#7c3aed, #6d3fbf)); border-bottom: 1px solid var(--tb-line); }
+#te-bulk-design .tb-brand { font-weight: 600; letter-spacing: -.3px; color: #fff; }
+#te-bulk-design .tb-top .tb-button { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.38); color: #fff; }
+#te-bulk-design .tb-top .tb-button:hover:not(:disabled) { background: rgba(255,255,255,.26); }
+#te-bulk-design .tb-spacer { flex: 1; }
+#te-bulk-design .tb-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 8px; border: 1px solid var(--tb-line); border-radius: 6px; background: var(--tb-surface); font-size: 13px; }
+#te-bulk-design .tb-button:hover:not(:disabled) { background: var(--tb-group); }
+#te-bulk-design .tb-primary { background: var(--tb-accent); color: var(--tb-accent-text); border-color: transparent; }
+#te-bulk-design .tb-primary:hover:not(:disabled) { background: var(--tb-accent); filter: brightness(.94); }
+#te-bulk-design .tb-quiet { border-color: transparent; background: transparent; color: var(--tb-muted); }
+#te-bulk-design [data-tip] { position: relative; }
+#te-bulk-design [data-tip]:is(:hover,:focus-visible)::after {
+  content: attr(data-tip); position: absolute; z-index: 10; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  width: max-content; max-width: min(240px, 70vw); padding: 5px 8px; border-radius: 4px; pointer-events: none;
+  background: var(--tb-text); color: var(--tb-surface); font: 12px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  white-space: normal; overflow-wrap: anywhere; text-align: center;
+}
+#te-bulk-design .tb-main { padding: 20px 24px; }
+#te-bulk-design .tb-heading { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+#te-bulk-design h1 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 24px; font-weight: 500; letter-spacing: -.5px; }
+#te-bulk-design h1 .tb-icon { width: 24px; height: 24px; color: var(--tb-accent); }
+#te-bulk-design .tb-counts { display: flex; gap: 18px; }
+#te-bulk-design .tb-metric { display: inline-flex; align-items: center; gap: 8px; padding: 3px 12px; border-radius: 999px; font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; }
+#te-bulk-design .tb-muted { color: var(--tb-muted); }
+#te-bulk-design .tb-update { display: flex; align-items: center; gap: 8px; margin-left: auto; color: var(--tb-muted); font-size: 12px; }
+#te-bulk-design .tb-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+#te-bulk-design .tb-search { display: flex; align-items: center; gap: 8px; min-width: 180px; min-height: 44px; flex: 1; border: 1px solid var(--tb-line); border-radius: 6px; padding: 8px 12px; background: var(--tb-surface); color: var(--tb-muted); }
+#te-bulk-design .tb-search .tb-icon { color: var(--tb-accent); }
+#te-bulk-design .tb-search input { width: 100%; min-width: 0; background: transparent; border: 0; outline-offset: 4px; color: var(--tb-text); font-size: 14px; }
+#te-bulk-design .tb-source-filters { display: flex; flex-wrap: wrap; gap: 2px; }
+#te-bulk-design .tb-source-filters [aria-pressed=true] { background: var(--tb-selected); color: var(--tb-accent); }
+#te-bulk-design #tb-cat-unwired[aria-pressed=true] { background: var(--tb-selected); color: var(--tb-accent); }
+#te-bulk-design input[type=checkbox] { margin: 0; width: 16px; height: 16px; flex-shrink: 0; }
+#te-bulk-design code { font: 12px/1.6 ui-monospace, monospace; overflow-wrap: anywhere; white-space: pre-wrap; }
+#te-bulk-design .tb-fields { display: grid; grid-template-columns: 20px minmax(0,1fr); gap: 10px 12px; margin: 12px 0; align-items: center; }
+#te-bulk-design .tb-fields dt { display: flex; align-items: center; color: var(--tb-muted); }
+#te-bulk-design .tb-fields dd { display: flex; align-items: center; gap: 8px; margin: 0; min-width: 0; }
+#te-bulk-design .tb-fields dd code { flex: 1; min-width: 0; }
+#te-bulk-design .tb-fields dd a { color: var(--tb-accent); overflow-wrap: anywhere; }
+#te-bulk-design .tb-empty { padding: 32px 16px; text-align: center; color: var(--tb-muted); font-size: 13px; }
+#te-bulk-design .tb-error { background: light-dark(#fcebec, #3d2327); color: light-dark(#8f2934, #ffc3ca); padding: 12px; font-size: 13px; margin-bottom: 12px; overflow-wrap: anywhere; }
+#te-bulk-design .has-failures { background: light-dark(#fff2d4, #43351b); color: light-dark(#795210, #f5d697); }
+#te-bulk-design .tb-settings { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 12px 24px; background: var(--tb-surface); border-bottom: 1px solid var(--tb-line); font-size: 12px; }
+#te-bulk-design .tb-settings label { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+#te-bulk-design .tb-settings input:not([type=checkbox]) { min-height: 44px; padding: 8px; background: var(--tb-page); border: 1px solid var(--tb-line); border-radius: 6px; max-width: 100%; }
+#te-bulk-design .tb-note { color: var(--tb-muted); font-size: 12px; margin-top: 8px; }
+#te-bulk-design .tb-note:empty { display: none; }
+/* ---- header nav(画面切替) / Agent・Tool カタログ ---- */
+#te-bulk-design .tb-nav {display:flex; gap:6px; margin-left:8px; flex-wrap:wrap;}
+#te-bulk-design .tb-nav-link {display:inline-flex; align-items:center; min-height:32px; padding:4px 14px; border:1px solid rgba(255,255,255,.38); border-radius:999px; background:rgba(255,255,255,.14); color:#fff; font-size:13px; text-decoration:none;}
+#te-bulk-design .tb-nav-link:hover {background:rgba(255,255,255,.26);}
+#te-bulk-design .tb-nav-link[aria-current="page"] {background:rgba(255,255,255,.92); border-color:transparent; color:light-dark(#2256bd,#274a8f); font-weight:600;}
+#te-bulk-design .tb-cat-metric {font-size:13px; background:var(--tb-group);}
+#te-bulk-design .tb-cat-diagram {margin-bottom:8px; border:1px solid var(--tb-line); border-radius:8px; background:var(--tb-surface); overflow:hidden;}
+#te-bulk-design .tb-diagram-bar {display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:8px 12px; border-bottom:1px solid var(--tb-line);}
+#te-bulk-design .tb-diagram-title {margin:0; font-size:14px; font-weight:500;}
+#te-bulk-design .tb-diagram-legend {display:flex; gap:12px; align-items:center; flex-wrap:wrap; color:var(--tb-muted); font-size:12px;}
+#te-bulk-design .tb-legend-item {display:inline-flex; align-items:center; gap:5px;}
+#te-bulk-design .tb-legend-dot {width:9px; height:9px; border-radius:3px;}
+#te-bulk-design .tb-diagram-zoom {display:flex; align-items:center; gap:4px;}
+#te-bulk-design .tb-diagram-zoom .tb-button {min-width:32px; min-height:32px; padding:4px;}
+#te-bulk-design .tb-diagram-scroll {overflow:auto; max-height:72vh; padding:14px;}
+#te-bulk-design .tb-diagram-wrap {width:max-content;}
+#te-bulk-design .tb-diagram-wrap svg {max-width:none; height:auto;}
+#te-bulk-design .tb-diagram-source {margin:0; padding:10px; border:1px dashed var(--tb-line); border-radius:6px; overflow:auto; font:12px/1.6 ui-monospace, monospace; white-space:pre; color:var(--tb-muted);}
+#te-bulk-design .tb-cat-section {margin-top:22px;}
+#te-bulk-design .tb-cat-section>h2 {display:flex; align-items:center; gap:8px; margin:0 0 8px; font-size:15px; font-weight:500;}
+#te-bulk-design .tb-cat-section>h2 .tb-icon {color:var(--tb-accent);}
+#te-bulk-design .tb-cat-count {color:var(--tb-muted); font-size:13px; font-weight:400; font-variant-numeric:tabular-nums;}
+#te-bulk-design .tb-cat-rows {border:1px solid var(--tb-line); border-radius:8px; overflow:hidden; background:var(--tb-surface);}
+#te-bulk-design .tb-cat-row {border-bottom:1px solid var(--tb-line);}
+#te-bulk-design .tb-cat-row:last-child {border-bottom:0;}
+#te-bulk-design .tb-cat-head {display:grid; grid-template-columns:minmax(180px,250px) minmax(0,1fr) minmax(96px,auto) 28px; gap:8px 14px; align-items:center; width:100%; padding:10px 14px; border:0; background:transparent; text-align:left;}
+#te-bulk-design .tb-cat-head:hover {background:light-dark(#eaf1ff,#1b2438);}
+#te-bulk-design .tb-cat-title {display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;}
+#te-bulk-design .tb-cat-title code {font-size:14px; overflow-wrap:anywhere;}
+#te-bulk-design .tb-cat-desc {color:var(--tb-muted); font-size:12.5px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; min-width:0;}
+#te-bulk-design .tb-cat-meta {color:var(--tb-muted); font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap; justify-self:end;}
+#te-bulk-design .tb-cat-chevron {display:inline-flex; justify-content:center; color:var(--tb-muted); transition:transform .15s ease;}
+#te-bulk-design .tb-cat-head[aria-expanded="true"] .tb-cat-chevron {transform:rotate(90deg); color:var(--tb-accent);}
+#te-bulk-design .tb-badge {display:inline-flex; align-items:center; padding:1px 8px; border-radius:999px; font-size:11px; font-weight:500; line-height:1.7;}
+#te-bulk-design .tb-badge.entrance {background:var(--tb-green-bg); color:var(--tb-green);}
+#te-bulk-design .tb-badge.webhook {background:light-dark(#f1eafd,#2b2340); color:var(--tb-violet);}
+#te-bulk-design .tb-badge.child {background:var(--tb-group); color:var(--tb-muted);}
+#te-bulk-design .tb-badge.unwired {background:var(--tb-red-bg); color:var(--tb-red);}
+#te-bulk-design .tb-cat-body {padding:4px 16px 14px 46px; background:var(--tb-page); border-top:1px solid var(--tb-line);}
+#te-bulk-design .tb-cat-desc-full {margin:10px 0 0; color:var(--tb-muted); font-size:12.5px; overflow-wrap:anywhere;}
+#te-bulk-design .tb-chip-group {display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+#te-bulk-design .tb-chip-label {color:var(--tb-muted); font-size:11px; font-weight:600; letter-spacing:.04em;}
+#te-bulk-design .tb-chip {display:inline-flex; align-items:center; min-height:24px; padding:2px 10px; border:1px solid var(--tb-line); border-radius:999px; background:var(--tb-surface); font-size:12px; line-height:1.5; font-family:inherit; color:inherit;}
+#te-bulk-design .tb-chip:hover {border-color:var(--tb-accent); color:var(--tb-accent); background:var(--tb-selected);}
+#te-bulk-design .tb-arg {display:inline-flex; align-items:baseline; gap:6px; margin:2px 8px 2px 0;}
+@media(max-width:760px) {
+  #te-bulk-design .tb-main { padding: 18px 14px; }
+  #te-bulk-design .tb-top { padding: 8px 14px; }
+}
+@media(max-width:460px) {
+  #te-bulk-design .tb-main { padding: 16px 12px; }
+  #te-bulk-design .tb-heading { gap: 12px; }
+  #te-bulk-design .tb-update-time { display: none; }
+  #te-bulk-design .tb-search { min-width: 100%; }
+  #te-bulk-design .tb-search input { font-size: 16px; }
+}
+/* カタログ画面の狭幅対応: 行は 2 段組に崩し、本文の字下げを詰める。 */
+@media(max-width:760px) {
+  #te-bulk-design .tb-top { flex-wrap: wrap; }
+  #te-bulk-design .tb-nav { order: 3; width: 100%; margin-left: 0; }
+  #te-bulk-design .tb-cat-head { grid-template-columns: minmax(0,1fr) 28px; grid-template-areas: "title chevron" "desc desc" "meta meta"; gap: 4px 8px; padding: 8px 10px; }
+  #te-bulk-design .tb-cat-title { grid-area: title; }
+  #te-bulk-design .tb-cat-desc { grid-area: desc; }
+  #te-bulk-design .tb-cat-meta { grid-area: meta; justify-self: start; white-space: normal; }
+  #te-bulk-design .tb-cat-chevron { grid-area: chevron; }
+  #te-bulk-design .tb-cat-body { padding: 4px 12px 12px; }
+  #te-bulk-design .tb-diagram-scroll { padding: 8px; }
+}
+
+/* フローの説明: 既存の色と文字体系を維持し、図と選択中の詳細を並べる。 */
+#te-bulk-design .tb-catalog-intro {margin:16px 0; color:var(--tb-muted); max-width:70ch;}
+#te-bulk-design .tb-cat-diagram {margin:0 0 24px;}
+#te-bulk-design .tb-diagram-explainer {display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; padding:12px 16px; color:var(--tb-muted); font-size:13px;}
+#te-bulk-design .tb-diagram-controls {display:flex; align-items:center; flex-wrap:wrap; gap:12px; padding:8px 16px; border-bottom:1px solid var(--tb-line);}
+#te-bulk-design .tb-diagram-controls .tb-button {min-width:88px;}
+#te-bulk-design .tb-motion-speed {display:flex; align-items:center; gap:8px; font-size:13px;}
+#te-bulk-design .tb-motion-speed select {min-height:44px; padding:8px; border:1px solid var(--tb-line); border-radius:6px; background:var(--tb-surface); color:var(--tb-text); font:inherit;}
+#te-bulk-design .tb-diagram-layout {display:grid; grid-template-columns:minmax(0,1fr) 280px;}
+#te-bulk-design .tb-diagram-scroll {min-width:0; min-height:360px; max-height:64vh;}
+#te-bulk-design .tb-diagram-detail {min-width:0; padding:24px 20px; border-left:1px solid var(--tb-line); background:var(--tb-page); overflow-wrap:anywhere;}
+#te-bulk-design .tb-diagram-detail h3 {font-size:18px; margin:4px 0 16px;}
+#te-bulk-design .tb-diagram-detail p {font-size:14px; line-height:1.75; margin:0 0 24px;}
+#te-bulk-design .tb-diagram-detail dl {margin:0; font-size:13px;}
+#te-bulk-design .tb-diagram-detail dt {color:var(--tb-muted); margin-top:16px;}
+#te-bulk-design .tb-diagram-detail dd {margin:4px 0 0;}
+#te-bulk-design .tb-diagram-detail code {font-size:12px;}
+#te-bulk-design .tb-diagram-caption {padding:12px 16px; border-top:1px solid var(--tb-line); color:var(--tb-muted); font-size:13px;}
+#te-bulk-design .tb-mermaid-source {padding:0 16px 16px; font-size:13px;}
+#te-bulk-design .tb-mermaid-source summary {cursor:pointer; padding:8px 0; color:var(--tb-accent);}
+#te-bulk-design .tb-flow-dot {fill:var(--tb-accent); stroke:var(--tb-surface); stroke-width:1.5px; pointer-events:none;}
+#te-bulk-design .tb-diagram-wrap [data-catalog-node] {cursor:pointer;}
+#te-bulk-design .tb-diagram-wrap [data-catalog-node]:is(:hover,:focus-visible,.tb-node-selected) rect {stroke:var(--tb-accent)!important; stroke-width:3px!important;}
+#te-bulk-design #tb-diagram-body .edge-animation-slow {animation-duration:var(--tb-flow-duration,50s)!important;}
+#te-bulk-design #tb-diagram-body .edge-pattern-dotted.edge-animation-slow {stroke-dasharray:2,5!important;}
+#te-bulk-design #tb-diagram-body[data-motion="paused"] .edge-animation-slow {animation-play-state:paused!important;}
+#te-bulk-design #tb-diagram-body.tb-reduced-motion .tb-flow-dot {display:none;}
+@media(prefers-reduced-motion:reduce) {
+  #te-bulk-design #tb-diagram-body .edge-animation-slow {animation:none!important;}
+  #te-bulk-design .tb-flow-dot {display:none;}
+}
+@media(max-width:1000px) {
+  #te-bulk-design .tb-diagram-layout {grid-template-columns:minmax(0,1fr);}
+  #te-bulk-design .tb-diagram-detail {border-left:0; border-top:1px solid var(--tb-line); padding:16px;}
+  #te-bulk-design .tb-diagram-scroll {max-height:60vh;}
+}
+@media print {
+  #te-bulk-design .tb-diagram-controls, #te-bulk-design .tb-flow-dot {display:none;}
+  #te-bulk-design #tb-diagram-body .edge-animation-slow {animation:none!important;}
+}
+
+/* 図解モード: 全幅の技術図と、その下の読解パネル。 */
+#te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-layout {display:block;}
+#te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-legend {display:none;}
+#te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-scroll {max-height:none;min-height:0;padding:16px;}
+#te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-detail {display:grid;grid-template-columns:220px minmax(0,1fr) minmax(220px,.8fr);gap:8px 32px;padding:24px 32px;border-left:0;border-top:1px solid var(--tb-line);align-items:start;}
+#te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-detail>span {grid-column:1;grid-row:1;font-size:12px;}
+#te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-detail h3 {grid-column:1;grid-row:2;margin:0;}
+#te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-detail p {grid-column:2;grid-row:1 / 3;margin:0;}
+#te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-detail dl {grid-column:3;grid-row:1 / 3;}
+#te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-detail dt:first-child {margin-top:0;}
+#te-bulk-design .tb-poster-svg .poster-node:focus-visible {outline:2px solid var(--tb-accent);outline-offset:5px;}
+#te-bulk-design .tb-poster-svg .poster-node:hover .poster-node-shape {stroke:var(--tb-accent);stroke-width:3px;}
+@media(max-width:760px) {
+  #te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-scroll {padding:8px;}
+  #te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-detail {display:block;padding:20px;}
+  #te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-detail h3 {margin:4px 0 16px;}
+  #te-bulk-design .tb-cat-diagram[data-mode="poster"] .tb-diagram-detail dl {margin-top:20px;}
+}
+
+/* ---- 実行統計(#/usage): Agent・Tool の呼び出し回数の集計表 ---- */
+#te-bulk-design .tb-usage-table {width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums;}
+#te-bulk-design .tb-usage-table th, #te-bulk-design .tb-usage-table td {padding:8px 14px; border-bottom:1px solid var(--tb-line); text-align:left; vertical-align:top;}
+#te-bulk-design .tb-usage-table tbody tr:last-child th, #te-bulk-design .tb-usage-table tbody tr:last-child td {border-bottom:0;}
+#te-bulk-design .tb-usage-table tbody tr:hover {background:light-dark(#eaf1ff,#1b2438);}
+#te-bulk-design .tb-usage-table thead th {position:sticky; top:0; z-index:1; color:var(--tb-muted); font-size:12px; font-weight:500; background:var(--tb-surface); white-space:nowrap;}
+#te-bulk-design .tb-usage-name {display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0;}
+#te-bulk-design .tb-usage-name code {font-size:14px; overflow-wrap:anywhere;}
+#te-bulk-design .tb-usage-desc {color:var(--tb-muted); font-size:12px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; max-width:60ch; text-align:left;}
+#te-bulk-design .tb-usage-num, #te-bulk-design .tb-usage-total {text-align:right; white-space:nowrap;}
+#te-bulk-design .tb-usage-total {font-weight:600;}
+#te-bulk-design .tb-usage-status, #te-bulk-design .tb-usage-last {color:var(--tb-muted); font-size:12.5px; white-space:nowrap;}
+@media(max-width:760px) {
+  #te-bulk-design .tb-usage-table th, #te-bulk-design .tb-usage-table td {padding:8px 10px; }
+  #te-bulk-design .tb-usage-status, #te-bulk-design .tb-usage-last {white-space:normal;}
+  #te-bulk-design .tb-usage-desc {display:none;}
+}
+
+/* ---- 実行フロー(#/runs): run・session の図と再生 ---- */
+#te-bulk-design .tb-runs-crumbs {display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin:0 0 12px; font-size:13px; color:var(--tb-muted);}
+#te-bulk-design .tb-runs-crumbs a {color:var(--tb-accent);}
+#te-bulk-design .tb-runs-chips {display:flex; gap:6px; flex-wrap:wrap; align-items:center; min-width:0;}
+#te-bulk-design .tb-runs-chips .tb-metric {font-size:12.5px; padding:2px 10px;}
+#te-bulk-design .tb-runs-session-note {font-size:12px; overflow-wrap:anywhere;}
+#te-bulk-design span.tb-runs-status {display:inline-flex; align-items:center; padding:1px 8px; border-radius:999px; font-size:12px; white-space:nowrap;}
+#te-bulk-design .tb-runs-status.is-ok {background:var(--tb-green-bg); color:var(--tb-green);}
+#te-bulk-design .tb-runs-status.is-error {background:var(--tb-red-bg); color:var(--tb-red);}
+#te-bulk-design .tb-runs-status.is-warn {background:light-dark(#fff2d4,#43351b); color:light-dark(#795210,#f5d697);}
+#te-bulk-design .tb-runs-status.is-running {background:var(--tb-selected); color:var(--tb-selected-text);}
+#te-bulk-design .tb-runs-status.is-neutral {background:var(--tb-group); color:var(--tb-muted);}
+#te-bulk-design .tb-runs-pick {display:inline-flex; align-items:center; min-height:32px; max-width:100%; border:0; background:transparent; padding:2px 0; color:var(--tb-accent); text-align:left;}
+#te-bulk-design .tb-runs-pick:hover code {text-decoration:underline;}
+#te-bulk-design .tb-runs-pick code {font-size:12.5px;}
+#te-bulk-design .tb-runs-figure {margin:12px 0 20px;}
+#te-bulk-design .tb-runs-session-body {min-height:0; max-height:280px;}
+#te-bulk-design .tb-runs-figure .tb-diagram-layout {align-items:start;}
+#te-bulk-design .tb-runs-body {height:min(78vh, 900px); max-height:none; min-height:420px;}
+#te-bulk-design .tb-runs-figure .tb-diagram-detail {max-height:min(78vh, 900px); overflow:auto;}
+#te-bulk-design .tb-runs-seek {flex:1 1 160px; min-width:120px; min-height:32px; accent-color:var(--tb-accent);}
+#te-bulk-design .tb-runs-elapsed {font-variant-numeric:tabular-nums; font-size:13px;}
+#te-bulk-design .tb-runs-preview {margin:0; padding:8px; max-height:220px; overflow:auto; background:var(--tb-surface); border:1px solid var(--tb-line); border-radius:6px; font:12px/1.6 ui-monospace, monospace; white-space:pre-wrap; overflow-wrap:anywhere;}
+#te-bulk-design .tb-runs-errors {margin:0; padding-left:18px; color:var(--tb-red);}
+#te-bulk-design .tb-runs-calls {margin:16px 0 0; padding:0; list-style:none; display:grid; gap:8px;}
+#te-bulk-design .tb-runs-calls>li {padding:8px 10px; border:1px solid var(--tb-line); border-radius:6px; background:var(--tb-surface);}
+#te-bulk-design .tb-runs-call-head {display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; font-size:12.5px; font-variant-numeric:tabular-nums;}
+#te-bulk-design .tb-runs-calls .tb-runs-preview {margin-top:6px; max-height:120px;}
+#te-bulk-design .tb-runs-calls .tb-runs-errors {margin-top:6px; font-size:12.5px;}
+#te-bulk-design .tb-runs-figure g.node {cursor:pointer; transition:opacity .25s ease, filter .25s ease;}
+#te-bulk-design .tb-runs-figure g.node[data-replay="pending"] {opacity:.22; filter:grayscale(1);}
+#te-bulk-design .tb-runs-figure g.node[data-replay="running"] {animation:tb-runs-pulse 1.1s ease-in-out infinite;}
+#te-bulk-design .tb-runs-figure g.node[data-replay="running"] :is(rect,path,polygon,circle,ellipse) {stroke:var(--tb-accent)!important; stroke-width:3px!important;}
+#te-bulk-design .tb-runs-figure path[data-replay] {transition:opacity .25s ease;}
+#te-bulk-design .tb-runs-figure path[data-replay="pending"] {opacity:.15;}
+#te-bulk-design .tb-runs-figure g.node:is(:hover,:focus-visible,.tb-node-selected) :is(rect,path,polygon,circle,ellipse) {stroke:var(--tb-accent)!important; stroke-width:3px!important;}
+@keyframes tb-runs-pulse {50% {opacity:.55;}}
+@media(prefers-reduced-motion:reduce) {
+  #te-bulk-design .tb-runs-figure g.node {transition:none; animation:none!important;}
+}
+@media(max-width:1000px) {
+  #te-bulk-design .tb-runs-body {height:70vh; min-height:320px;}
+  #te-bulk-design .tb-runs-figure .tb-diagram-detail {max-height:none;}
+}
+@media(max-width:760px) {
+  #te-bulk-design .tb-runs-table th:nth-child(6), #te-bulk-design .tb-runs-table td:nth-child(6) {display:none;}
+}
+</style>
+</head>
+<body>
+
+<section id="te-bulk-design" aria-label="TrackEverything の管理画面">
+  <header class="tb-top"><span class="tb-brand">TrackEverything</span><nav class="tb-nav" aria-label="画面切り替え"><a id="tb-nav-runs" class="tb-nav-link" href="#/runs">実行フロー</a><a id="tb-nav-catalog" class="tb-nav-link" href="#/catalog">Agent / Tool</a><a id="tb-nav-usage" class="tb-nav-link" href="#/usage">実行統計</a></nav><span class="tb-spacer"></span><button id="tb-settings-toggle" class="tb-button tb-quiet" aria-label="接続設定">設定</button></header>
+  <div id="tb-settings" class="tb-settings" hidden><label>API トークン <input id="token" type="password" aria-label="X-Webhook-Token" autocomplete="off" placeholder="X-Webhook-Token"></label></div>
+  <main id="tb-catalog" class="tb-main" hidden>
+    <div class="tb-heading"><h1><span id="tb-cat-icon" aria-hidden="true"></span>Agent / Tool カタログ</h1><div class="tb-counts"><span id="tb-cat-count-agents" class="tb-metric tb-cat-metric">—</span><span id="tb-cat-count-tools" class="tb-metric tb-cat-metric">—</span><span id="tb-cat-count-unwired" class="tb-metric tb-muted">—</span></div><div class="tb-update"><span class="tb-update-time" id="tb-cat-update-time"></span><button class="tb-button" id="tb-cat-refresh">更新</button></div></div>
+
+    <div id="tb-cat-error" class="tb-error" role="alert" hidden></div>
+    <p class="tb-catalog-intro">入力から結果までの流れと、登録された Agent・Tool の接続を確認できます。</p>
+    <figure class="tb-cat-diagram" data-mode="poster" aria-label="実行と接続関係の図">
+      <div class="tb-diagram-explainer"><span class="tb-badge entrance">フローの説明</span><span>動きはデータの方向を示す模式表示です。実行状態や処理時間は表しません。</span></div>
+      <div class="tb-diagram-bar">
+        <h2 class="tb-diagram-title">データの流れ</h2>
+        <div id="tb-diagram-mode" class="tb-source-filters" role="group" aria-label="図の種類"><button type="button" class="tb-button tb-quiet" data-mode="poster" aria-pressed="true">図解</button><button type="button" class="tb-button tb-quiet" data-mode="execution" aria-pressed="false">実行の流れ</button><button type="button" class="tb-button tb-quiet" data-mode="flow" aria-pressed="false">委任グラフ</button><button type="button" class="tb-button tb-quiet" data-mode="tools" aria-pressed="false">Tool 利用</button></div>
+        <span class="tb-spacer"></span>
+        <div class="tb-diagram-legend" aria-hidden="true"><span class="tb-legend-item"><span class="tb-legend-dot" style="background:light-dark(#2256bd,#a2bdff)"></span>入口</span><span class="tb-legend-item"><span class="tb-legend-dot" style="background:light-dark(#186141,#a0e4bc)"></span>Source</span><span class="tb-legend-item"><span class="tb-legend-dot" style="background:light-dark(#0e7490,#67e8f9)"></span>Tool</span><span class="tb-legend-item"><span class="tb-legend-dot" style="background:light-dark(#8f2934,#ffc3ca)"></span>未接続</span></div>
+        <div class="tb-diagram-zoom"><button type="button" class="tb-button tb-quiet" id="tb-diagram-zoom-out" aria-label="縮小"><span aria-hidden="true" id="tb-diagram-zoom-out-icon"></span></button><span id="tb-diagram-zoom-label" class="tb-muted">100%</span><button type="button" class="tb-button tb-quiet" id="tb-diagram-zoom-in" aria-label="拡大"><span aria-hidden="true" id="tb-diagram-zoom-in-icon"></span></button><button type="button" class="tb-button tb-quiet" id="tb-diagram-zoom-reset" aria-label="等倍に戻す"><span aria-hidden="true" id="tb-diagram-zoom-reset-icon"></span></button></div>
+      </div>
+      <div class="tb-diagram-controls">
+        <button type="button" class="tb-button" id="tb-diagram-play" aria-pressed="true" disabled>一時停止</button>
+        <label class="tb-motion-speed">速度 <select id="tb-diagram-speed" disabled><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+        <span id="tb-diagram-motion-status" class="tb-muted" role="status">動きを準備中</span><span class="tb-spacer"></span><button type="button" class="tb-button" id="tb-diagram-export" disabled>PNG を保存</button>
+      </div>
+      <div class="tb-diagram-layout">
+        <div id="tb-diagram-body" class="tb-diagram-scroll" data-motion="paused" tabindex="0" aria-label="データフロー図。矢印キーでスクロールできます。"></div>
+        <aside id="tb-diagram-detail" class="tb-diagram-detail" aria-label="ノードの詳細" aria-live="polite"><h3>ノードから詳しく見る</h3><p>図のノードを選ぶと、役割・入出力・接続先を確認できます。</p></aside>
+      </div>
+      <figcaption id="tb-diagram-caption" class="tb-diagram-caption">共通の実行契約と登録済みの接続関係を確認できます。</figcaption>
+      <details class="tb-mermaid-source"><summary>Mermaid ソースを表示</summary><pre id="tb-diagram-source-text" class="tb-diagram-source"></pre></details>
+    </figure>
+    <div class="tb-filters"><label class="tb-search" data-tip="名前・説明・module で検索"><span id="tb-cat-search-icon" aria-hidden="true"></span><input id="tb-cat-search" aria-label="名前・説明・module で検索" title="名前・説明・module で検索" autocomplete="off"></label><div id="tb-cat-sections" class="tb-source-filters" role="group" aria-label="表示セクション"><button type="button" class="tb-button tb-quiet" data-section-chip="agents" aria-pressed="true">Agent</button><button type="button" class="tb-button tb-quiet" data-section-chip="tools" aria-pressed="true">Tool</button><button type="button" class="tb-button tb-quiet" data-section-chip="harnesses" aria-pressed="true">Harness</button><button type="button" class="tb-button tb-quiet" data-section-chip="sources" aria-pressed="true">Source</button></div><button type="button" id="tb-cat-unwired" class="tb-button tb-quiet" aria-pressed="false">未接続のみ</button></div>
+    <div id="tb-catalog-rows"></div>
+  </main>
+  <main id="tb-usage" class="tb-main" hidden>
+    <div class="tb-heading"><h1><span id="tb-usage-icon" aria-hidden="true"></span>実行統計</h1><div class="tb-counts"><span id="tb-usage-count-agents" class="tb-metric tb-cat-metric">—</span><span id="tb-usage-count-tools" class="tb-metric tb-cat-metric">—</span></div><div class="tb-update"><span class="tb-update-time" id="tb-usage-update-time"></span><button class="tb-button" id="tb-usage-refresh">更新</button></div></div>
+    <div id="tb-usage-error" class="tb-error" role="alert" hidden></div>
+    <p class="tb-catalog-intro">実行ログの agent / tool イベントを集計した、Agent・Tool ごとの呼び出し回数です。登録済みでまだ呼び出されていない成分も 0 回として並びます。</p>
+    <div class="tb-filters"><label class="tb-search" data-tip="名前・説明で検索"><span id="tb-usage-search-icon" aria-hidden="true"></span><input id="tb-usage-search" aria-label="名前・説明で検索" title="名前・説明で検索" autocomplete="off"></label></div>
+    <div id="tb-usage-agent-rows"></div>
+    <div id="tb-usage-tool-rows"></div>
+    <p class="tb-note" id="tb-usage-scope"></p>
+  </main>
+  <main id="tb-runs" class="tb-main" hidden>
+    <div class="tb-heading"><h1><span id="tb-runs-icon" aria-hidden="true"></span>実行フロー</h1><div class="tb-update"><span class="tb-update-time" id="tb-runs-update-time"></span><button class="tb-button" id="tb-runs-refresh">更新</button></div></div>
+    <p class="tb-catalog-intro">run ID または session ID を入力すると、実行の流れと各 step の所要時間・結果を図と再生で確認できます。</p>
+    <form id="tb-runs-form" class="tb-filters" role="search" aria-label="実行の検索"><label class="tb-search" data-tip="run ID または session ID"><span id="tb-runs-search-icon" aria-hidden="true"></span><input id="tb-runs-input" aria-label="run ID または session ID" placeholder="run ID または session ID" autocomplete="off" spellcheck="false"></label><button type="submit" class="tb-button tb-primary">表示</button></form>
+    <div id="tb-runs-error" class="tb-error" role="alert" hidden></div>
+    <nav id="tb-runs-crumbs" class="tb-runs-crumbs" aria-label="実行フローの移動" hidden></nav>
+    <div id="tb-runs-recent"></div>
+    <figure id="tb-runs-session" class="tb-cat-diagram tb-runs-figure" aria-label="session の run の並び" hidden>
+      <div class="tb-diagram-bar"><h2 class="tb-diagram-title" id="tb-runs-session-title">session</h2><div id="tb-runs-session-summary" class="tb-runs-chips"></div></div>
+      <div class="tb-diagram-controls" id="tb-runs-session-controls"></div>
+      <div id="tb-runs-session-body" class="tb-diagram-scroll tb-runs-session-body" tabindex="0" aria-label="session の run の図。run を選ぶと下に流れを表示します。"></div>
+      <figcaption class="tb-diagram-caption">左から開始順に run を並べます。run を選ぶと、その run の流れを下に表示します。</figcaption>
+      <details class="tb-mermaid-source"><summary>Mermaid ソースを表示</summary><pre id="tb-runs-session-source" class="tb-diagram-source"></pre></details>
+    </figure>
+    <figure id="tb-runs-run" class="tb-cat-diagram tb-runs-figure" aria-label="run の実行フロー" hidden>
+      <div class="tb-diagram-bar"><h2 class="tb-diagram-title" id="tb-runs-run-title">run</h2><div id="tb-runs-summary" class="tb-runs-chips"></div><span class="tb-spacer"></span>
+        <div id="tb-runs-mode" class="tb-source-filters" role="group" aria-label="図の種類"><button type="button" class="tb-button tb-quiet" data-mode="structure" aria-pressed="true" title="Agent・LLM・Tool・Skill の 4 列と呼出しの矢印">構成</button><button type="button" class="tb-button tb-quiet" data-mode="flow" aria-pressed="false" title="step を実行順に連結した図">順序</button><button type="button" class="tb-button tb-quiet" data-mode="gantt" aria-pressed="false" title="実時刻の時間軸">タイムライン</button></div>
+        <div class="tb-diagram-zoom"><button type="button" class="tb-button tb-quiet" id="tb-runs-zoom-out" aria-label="縮小"></button><span id="tb-runs-zoom-label" class="tb-muted">100%</span><button type="button" class="tb-button tb-quiet" id="tb-runs-zoom-in" aria-label="拡大"></button><button type="button" class="tb-button tb-quiet" id="tb-runs-zoom-reset" aria-label="枠幅に合わせる"></button></div>
+      </div>
+      <div class="tb-diagram-controls" id="tb-runs-controls"></div>
+      <div class="tb-diagram-layout"><div id="tb-runs-body" class="tb-diagram-scroll tb-runs-body" tabindex="0" aria-label="run の実行フロー図。矢印キーでスクロールできます。"></div><aside id="tb-runs-detail" class="tb-diagram-detail" aria-label="step の詳細" aria-live="polite"></aside></div>
+      <figcaption id="tb-runs-caption" class="tb-diagram-caption"></figcaption>
+      <details class="tb-mermaid-source"><summary>Mermaid ソースを表示</summary><pre id="tb-runs-source" class="tb-diagram-source"></pre></details>
+    </figure>
+  </main>
+</section>
+<script src="static/js/api.js"></script>
+<script src="static/js/app.js"></script>
+<script src="static/js/usage-model.js"></script>
+<script src="static/js/usage.js"></script>
+<script src="static/js/catalog-model.js"></script>
+<script src="static/js/catalog-poster.js"></script>
+<script src="static/js/catalog.js"></script>
+<script src="static/js/runs-model.js"></script>
+<script src="static/js/runs.js"></script>
+</body>
+</html>
